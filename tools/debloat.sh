@@ -1,22 +1,37 @@
 #!/bin/bash
 
 # debloat.sh - Android Phone Debloater
-# Usage: ./tools/debloat.sh <device_ip>
+# Usage: ./tools/debloat.sh [device_id/ip]
+# If no argument is provided, it attempts to use the only connected device.
 
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <device_ip>"
+if [ "$#" -eq 1 ]; then
+    TARGET=$1
+    ADB="adb -s $TARGET"
+elif [ "$#" -eq 0 ]; then
+    # Check if exactly one device is connected
+    DEVICE_COUNT=$(adb devices | grep -v "List of devices" | grep "device$" | wc -l)
+    if [ "$DEVICE_COUNT" -eq 1 ]; then
+        echo "No target specified. Using the only connected device..."
+        ADB="adb"
+    else
+        echo "Error: Please specify a device ID or IP address when multiple (or no) devices are connected."
+        echo "Usage: $0 [device_id/ip]"
+        exit 1
+    fi
+else
+    echo "Usage: $0 [device_id/ip]"
     exit 1
 fi
 
-DEVICE_IP=$1
-ADB="adb -s $DEVICE_IP"
-
-echo "Connecting to $DEVICE_IP..."
-$ADB connect $DEVICE_IP
+# If we have a target that looks like an IP, try to connect first
+if [[ $TARGET =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Connecting to $TARGET..."
+    adb connect $TARGET > /dev/null 2>&1
+fi
 
 # Verify connection
 if ! $ADB shell getprop ro.product.model > /dev/null 2>&1; then
-    echo "Error: Could not connect to device at $DEVICE_IP. Make sure USB debugging is enabled."
+    echo "Error: Could not connect to device. Make sure USB debugging is enabled and the device is authorized."
     exit 1
 fi
 
