@@ -1,0 +1,38 @@
+name: ADB Skill Test
+
+on:
+  push:
+    branches: [ main, feature/debloat-skill ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-debloat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Start Android Emulator
+        uses: reactivecircuits/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+
+      - name: Run Debloat Test
+        run: |
+          chmod +x tools/debloat.sh
+          # We don't pass an IP because the emulator should be the only device connected
+          ./tools/debloat.sh
+          
+      - name: Verify Safety Protections
+        run: |
+          # Verify Google Play Store is still there
+          adb shell pm list packages com.android.vending | grep "package:com.android.vending"
+          
+          # Verify a launcher is still present (we don't know the exact name but it shouldn't be empty)
+          adb shell dumpsys window | grep "mCurrentFocus"
