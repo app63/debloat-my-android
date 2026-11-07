@@ -45,7 +45,7 @@ PROTECTED_PACKAGES=(
 )
 
 # We need to dynamically find the current default launcher to protect it
-CURRENT_LAUNCHER=$($ADB shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | grep 'package=' | cut -d'=' -f2 | cut -d'/' -f1 | head -n 1)
+CURRENT_LAUNCHER=$($ADB shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | grep 'package=' | sed 's/.*package=//' | cut -d'/' -f1 | head -n 1)
 if [ -n "$CURRENT_LAUNCHER" ]; then
     PROTECTED_PACKAGES+=("$CURRENT_LAUNCHER")
     echo "Protecting current launcher: $CURRENT_LAUNCHER"
