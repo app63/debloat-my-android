@@ -1,6 +1,14 @@
 # Android Phone Debloater Skill
 
-This repository provides a set of tools to debloat Android phones using ADB (Android Debug Bridge). It removes unnecessary pre-installed apps (bloatware), including Google apps and brand-specific apps, while ensuring the device remains functional.
+This repository provides a specialized skill for AI agents (like OpenCode and Claude) to debloat Android phones and tablets using ADB (Android Debug Bridge). It removes unnecessary pre-installed apps (bloatware), including Google apps and brand-specific apps, while ensuring the device remains functional.
+
+## 🤖 Agent Instructions
+
+When this repository is loaded as a skill, the agent should:
+1. **Verify ADB**: Check if `adb` is available in the environment.
+2. **Connect Device**: Use `./tools/debloat.sh` with the provided device ID or IP.
+3. **Safety Check**: Inform the user that the Google Play Store and the active Launcher are protected and will not be removed.
+4. **Execution**: Run the debloat script and report the result.
 
 ## 🚀 Features
 
@@ -21,19 +29,22 @@ This repository provides a set of tools to debloat Android phones using ADB (And
 
 ## 📖 Usage
 
-### 1. Debloating your phone
-
-Run the `debloat.sh` script and provide your device's IP address (if using Wi-Fi) or omit it if using USB (you may need to modify the script slightly for USB-only).
-
+### For AI Agents
+The agent can simply run:
 ```bash
 chmod +x tools/debloat.sh
-./tools/debloat.sh <your_device_ip>
+./tools/debloat.sh [device_id/ip]
 ```
 
-### 2. Restoring apps
+### Manual Usage
+If you are running this manually:
+```bash
+chmod +x tools/debloat.sh
+./tools/debloat.sh <your_device_id_or_ip>
+```
 
+### Restoring apps
 If you accidentally removed something important, you can reinstall it using the following ADB command:
-
 ```bash
 adb shell cmd package install-existing <package_name>
 ```
@@ -43,6 +54,7 @@ adb shell cmd package install-existing <package_name>
 - `tools/`: Contains the core scripts for debloating and restoration.
   - `debloat.sh`: The main script to remove bloatware.
   - `restore.sh`: Utility script for restoration guidance.
+- `AGENTS.md`: Specific guidance for AI agents operating in this repo.
 
 ## ⚠️ Disclaimer
 
