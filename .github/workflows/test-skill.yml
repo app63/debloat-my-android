@@ -1,0 +1,60 @@
+name: ADB Skill Test
+
+on:
+  push:
+    branches: [ main, feature/debloat-skill ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-debloat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Mock Debloat Test
+        run: |
+          # 1. Create a mock adb binary
+          mkdir -p bin
+          cat << 'EOF' > bin/adb
+          #!/bin/bash
+          if [[ "$*" == *"shell getprop ro.product.model"* ]]; then
+            echo "Mock Android Phone"
+          elif [[ "$*" == *"shell pm list packages -u"* ]]; then
+            echo "package:com.android.vending"
+            echo "package:com.android.launcher3"
+            echo "package:com.google.android.apps.maps"
+            echo "package:com.android.settings"
+          elif [[ "$*" == *"shell dumpsys window"* ]]; then
+            echo "mCurrentFocus=Window{package=com.android.launcher3/com.android.launcher3.Launcher}"
+          elif [[ "$*" == *"shell pm uninstall"* ]]; then
+            # Fail if trying to uninstall protected apps
+            if [[ "$*" == *"com.android.vending"* ]] || [[ "$*" == *"com.android.launcher3"* ]]; then
+              echo "Failure [NOT ALLOWED]"
+              exit 1
+            fi
+            echo "Success"
+            exit 0
+          elif [[ "$*" == *"shell pm disable-user"* ]]; then
+             if [[ "$*" == *"com.android.vending"* ]] || [[ "$*" == *"com.android.launcher3"* ]]; then
+              echo "Failure [NOT ALLOWED]"
+              exit 1
+            fi
+            echo "Success"
+            exit 0
+          fi
+          EOF
+          chmod +x bin/adb
+          
+          # Add mock adb to PATH
+          export PATH=$PWD/bin:$PATH
+          
+          # Run the script
+          chmod +x tools/debloat.sh
+          ./tools/debloat.sh mock_device
+          
+          # Verify safety protections
+          ./tools/debloat.sh mock_device > test_output.log
+          grep "Skipping protected package: com.android.vending" test_output.log
+          grep "Protecting current launcher: com.android.launcher3" test_output.log
