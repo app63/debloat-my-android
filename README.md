@@ -2,6 +2,13 @@
 
 This repository provides a specialized skill for AI agents (like OpenCode and Claude) to debloat Android phones and tablets using ADB (Android Debug Bridge). It removes unnecessary pre-installed apps (bloatware), including Google apps and brand-specific apps, while ensuring the device remains functional.
 
+## 🛠️ Installation as a Skill
+
+To use this as a skill, simply provide the following GitHub URL to your AI agent (OpenCode, Claude, etc.):
+`https://github.com/app63/debloat-my-android`
+
+The agent will automatically load the `AGENTS.md` and `README.md` instructions to safely debloat your device.
+
 ## 🤖 Agent Instructions
 
 When this repository is loaded as a skill, the agent should:
