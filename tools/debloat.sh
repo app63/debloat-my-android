@@ -27,8 +27,6 @@ echo "Connected to $( $ADB shell getprop ro.product.model )"
 # 2. Default Launcher (to avoid bricking)
 PROTECTED_PACKAGES=(
     "com.android.vending" 
-    "com.google.android.apps.tv.launcherx" # Example for some TVs
-    "com.google.android.apps.nio" # Google TV Home
 )
 
 # We need to dynamically find the current default launcher to protect it
