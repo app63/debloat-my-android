@@ -13,15 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Run Mock Debloat Test
         run: |
-          # Since real Android Emulators are heavy and often fail in standard GH Actions 
-          # without specific hardware acceleration (KVM), we implement a mock test 
-          # to verify the script logic and safety checks.
-          
           # 1. Create a mock adb binary
           mkdir -p bin
           cat << 'EOF' > bin/adb
@@ -62,8 +55,6 @@ jobs:
           ./tools/debloat.sh mock_device
           
           # Verify safety protections
-          # In a real environment, we would use adb shell. Here we verify the script's logs.
-          # We can capture output to a file.
           ./tools/debloat.sh mock_device > test_output.log
           grep "Skipping protected package: com.android.vending" test_output.log
           grep "Protecting current launcher: com.android.launcher3" test_output.log
