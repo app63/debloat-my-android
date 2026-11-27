@@ -25,19 +25,22 @@ jobs:
             echo "package:com.android.vending"
             echo "package:com.android.launcher3"
             echo "package:com.google.android.apps.maps"
+            echo "package:com.google.android.gms"
+            echo "package:com.snapchat.android"
+            echo "package:com.google.mainline.go.telemetry"
             echo "package:com.android.settings"
           elif [[ "$*" == *"shell dumpsys window"* ]]; then
             echo "mCurrentFocus=Window{package=com.android.launcher3/com.android.launcher3.Launcher}"
           elif [[ "$*" == *"shell pm uninstall"* ]]; then
             # Fail if trying to uninstall protected apps
-            if [[ "$*" == *"com.android.vending"* ]] || [[ "$*" == *"com.android.launcher3"* ]]; then
+            if [[ "$*" == *"com.android.vending"* ]] || [[ "$*" == *"com.android.launcher3"* ]] || [[ "$*" == *"com.google.android.gms"* ]]; then
               echo "Failure [NOT ALLOWED]"
               exit 1
             fi
             echo "Success"
             exit 0
           elif [[ "$*" == *"shell pm disable-user"* ]]; then
-             if [[ "$*" == *"com.android.vending"* ]] || [[ "$*" == *"com.android.launcher3"* ]]; then
+             if [[ "$*" == *"com.android.vending"* ]] || [[ "$*" == *"com.android.launcher3"* ]] || [[ "$*" == *"com.google.android.gms"* ]]; then
               echo "Failure [NOT ALLOWED]"
               exit 1
             fi
@@ -58,3 +61,10 @@ jobs:
           ./tools/debloat.sh mock_device > test_output.log
           grep "Skipping protected package: com.android.vending" test_output.log
           grep "Protecting current launcher: com.android.launcher3" test_output.log
+
+          # Verify tracker-only mode removes tracked packages and not protected services
+          ./tools/debloat.sh --trackers-only mock_device > tracker_output.log
+          grep "Removing com.snapchat.android..." tracker_output.log
+          grep "Removing com.google.mainline.go.telemetry..." tracker_output.log
+          ! grep "Removing com.android.vending..." tracker_output.log
+          ! grep "Removing com.google.android.gms..." tracker_output.log

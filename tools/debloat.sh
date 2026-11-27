@@ -1,13 +1,30 @@
 #!/bin/bash
 
 # debloat.sh - Android Phone Debloater
-# Usage: ./tools/debloat.sh [device_id/ip]
+# Usage: ./tools/debloat.sh [--trackers-only] [device_id/ip]
 # If no argument is provided, it attempts to use the only connected device.
 
-if [ "$#" -eq 1 ]; then
-    TARGET=$1
+TRACKERS_ONLY=false
+TARGET=""
+
+for ARG in "$@"; do
+    case "$ARG" in
+        --trackers-only)
+            TRACKERS_ONLY=true
+            ;;
+        *)
+            if [ -n "$TARGET" ]; then
+                echo "Usage: $0 [--trackers-only] [device_id/ip]"
+                exit 1
+            fi
+            TARGET=$ARG
+            ;;
+    esac
+done
+
+if [ -n "$TARGET" ]; then
     ADB="adb -s $TARGET"
-elif [ "$#" -eq 0 ]; then
+else
     # Check if exactly one device is connected
     DEVICE_COUNT=$(adb devices | grep -v "List of devices" | grep "device$" | wc -l)
     if [ "$DEVICE_COUNT" -eq 1 ]; then
@@ -15,12 +32,9 @@ elif [ "$#" -eq 0 ]; then
         ADB="adb"
     else
         echo "Error: Please specify a device ID or IP address when multiple (or no) devices are connected."
-        echo "Usage: $0 [device_id/ip]"
+        echo "Usage: $0 [--trackers-only] [device_id/ip]"
         exit 1
     fi
-else
-    echo "Usage: $0 [device_id/ip]"
-    exit 1
 fi
 
 # If we have a target that looks like an IP, try to connect first
@@ -41,7 +55,8 @@ echo "Connected to $( $ADB shell getprop ro.product.model )"
 # 1. Google Play Store
 # 2. Default Launcher (to avoid bricking)
 PROTECTED_PACKAGES=(
-    "com.android.vending" 
+    "com.android.vending"
+    "com.google.android.gms"
 )
 
 # We need to dynamically find the current default launcher to protect it
@@ -51,6 +66,22 @@ if [ -n "$CURRENT_LAUNCHER" ]; then
     echo "Protecting current launcher: $CURRENT_LAUNCHER"
 fi
 
+# Explicit tracker package names. These are not inferred from app labels or SDK
+# signatures and are separate from Android Play Services, which remains protected.
+TRACKER_PACKAGES=(
+    "com.facebook.katana"
+    "com.facebook.orca"
+    "com.instagram.android"
+    "com.snapchat.android"
+    "com.twitter.android"
+    "com.zhiliaoapp.musically"
+    "com.google.mainline.go.telemetry"
+)
+
+if [ "$TRACKERS_ONLY" = true ]; then
+    echo "Running in tracker-only mode..."
+fi
+
 echo "Starting debloat process..."
 
 # Get all installed packages
@@ -58,6 +89,19 @@ ALL_PACKAGES=$($ADB shell pm list packages -u)
 
 for PKG in $ALL_PACKAGES; do
     PKG=${PKG#package:}
+
+    if [ "$TRACKERS_ONLY" = true ]; then
+        IS_TRACKER=false
+        for TRACKER in "${TRACKER_PACKAGES[@]}"; do
+            if [ "$PKG" == "$TRACKER" ]; then
+                IS_TRACKER=true
+                break
+            fi
+        done
+        if [ "$IS_TRACKER" = false ]; then
+            continue
+        fi
+    fi
     
     # Skip protected packages
     SKIP=false
