@@ -6,6 +6,7 @@
 
 ## Operational Commands
 - **Debloat**: `chmod +x tools/debloat.sh && ./tools/debloat.sh [device_id/ip]` (supports USB serials, IPs, or auto-detection if only one device is connected).
+- **Tracker-only debloat**: `./tools/debloat.sh --trackers-only [device_id/ip]` removes only the explicit tracker/telemetry package names in `TRACKER_PACKAGES`; it does not scan or remove SDK code bundled into other apps.
 - **Restore**: Restoration is currently handled per-package via `adb shell cmd package install-existing <package_name>`.
 
 ## Development Workflow

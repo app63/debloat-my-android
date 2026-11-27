@@ -50,6 +50,15 @@ chmod +x tools/debloat.sh
 ./tools/debloat.sh <your_device_id_or_ip>
 ```
 
+To remove only an explicit list of known tracker and telemetry packages without
+touching the broader package inventory:
+```bash
+./tools/debloat.sh --trackers-only <your_device_id_or_ip>
+```
+Tracker-only mode always protects Google Play Store, Google Play Services, and the
+active launcher. It does not claim to detect or remove third-party SDK code embedded
+inside other apps.
+
 ### Restoring apps
 If you accidentally removed something important, you can reinstall it using the following ADB command:
 ```bash
